@@ -64,8 +64,8 @@
   - 동시 세션 제어
     - 동일한 계정으로 인증 받을때 생성되는 세션의 허용갯수가 초과하지 않고 유지하는 것
     - 제어 방법
-      1. 이전 사용자 세션 만료
-      2. 현재 사용자 인증 실패
+      - 이전 사용자 세션 만료
+      - 현재 사용자 인증 실패
     ```java
     protected void configure(HttpSecurity http) throws Exception {
           http.sessionManagement()
@@ -140,3 +140,32 @@
       - @PreAuthorize("hasRole('USER')")
         public void user(){ System.out.println("user"))
   - 동적 방식 - DB 연동 프로그래밍
+  
+> 인증/인가 API
+
+- FilterSecurityInterceptor
+  - 인증 예외를 발생시키는 필터 (맨 마지막에 위치)
+- ExceptionTranslationFilter
+  - AuthenticationException
+    - 인증 예외 처리
+      1. AuthenticationEntryPoint 호출
+          - 로그인 페이지 이동, 401 오류 코드 전달 등
+      2. 인증 예외가 발생하기 전의 요청정보를 저장
+          - RequestCache
+            - 사용자의 이전 요청 정보를 세션에 저장하고 이를 꺼내오는 캐시 메카니즘
+            - SavedRequest
+              - 사용자가 요청앴던 request 파라미터 값들, 그 당시의 헤더값들 등이 저장
+        
+      _# 요청정보는 SavedRequest에 저장되고, SavedRequest를 RequestCache가 세션에 저장_
+  - AccessDeniedException
+    - 인가 예외 처리
+      - AccessDeniedHandler에서 예외 처리하도록 제공
+  ```java
+  protected void configure(HttpSecurity http) throws Exception {
+	    http.exceptionHandling() 					
+                  .authenticationEntryPoint(authenticationEntryPoint())     		// 인증실패 시 처리
+                  .accessDeniedHandler(accessDeniedHandler()) 			        // 인증실패 시 처리
+  }
+  ```
+  
+  
