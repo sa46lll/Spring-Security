@@ -24,8 +24,8 @@ import java.io.IOException;
  * AnonymousAuthenticationFilter, 세션, 권한 설정, 예외 처리 및 요청 캐시 필터
  */
 
-@Configuration
-@EnableWebSecurity
+//@Configuration
+//@EnableWebSecurity
 public class SecurityConfig2 extends WebSecurityConfigurerAdapter {
 
     @Override
@@ -73,7 +73,6 @@ public class SecurityConfig2 extends WebSecurityConfigurerAdapter {
                     }
                 })
                 ;
-
         /*
         // 동시 세션 제어
         http
@@ -83,6 +82,7 @@ public class SecurityConfig2 extends WebSecurityConfigurerAdapter {
                 ;
 
          */
+
         /*
         // 세션 고정 보호
         http
@@ -90,8 +90,5 @@ public class SecurityConfig2 extends WebSecurityConfigurerAdapter {
                 .sessionFixation().changeSessionId();
 
          */
-
-
-
     }
 }

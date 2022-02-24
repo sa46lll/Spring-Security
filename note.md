@@ -167,5 +167,16 @@
                   .accessDeniedHandler(accessDeniedHandler()) 			        // 인증실패 시 처리
   }
   ```
-  
-  
+- Form 인증
+  - CSRF (사이트 간 요청 위조)
+    - 유저가 자신의 의지와는 무관하게 공격자가 의도한 행위(등록, 수정, 삭제 등)를 특정 웹사이트에 요청하도록 만드는 공격
+    - 방지 방법
+      - CsrfFilter
+        - 모든 요청에 랜덤하게 생성된 토큰을 HTTP 파라미터로 요구
+        - 요청 시 전달되는 토큰 값과 서버에 저장된 실제 값과 비교한 후 일치하지 않으면 요청 실패
+        - Client
+          - <input type="hidden" name="${_csrf.paramterName}"value="${_csrf.token}"/>
+          - HTTP METHOD : PATCH, POST, PUT, DELETE
+        - Spring Security
+          - http.csrf() : 기본 활성화 되어있음
+          - http.csrf().disabled(): 비활성화

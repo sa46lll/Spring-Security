@@ -24,9 +24,9 @@ import java.io.IOException;
  * Form Login, Logout, Remember Me
  */
 
-/*
-@Configuration
-@EnableWebSecurity      // 웹 보안 활성화
+
+//@Configuration
+//@EnableWebSecurity      // 웹 보안 활성화
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
@@ -87,4 +87,4 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 ;
     }
 }
-*/
+
