@@ -1,5 +1,6 @@
 package io.security.basicsecurity.config;
 
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -19,6 +20,11 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
+/**
+ * Form Login, Logout, Remember Me
+ */
+
+/*
 @Configuration
 @EnableWebSecurity      // 웹 보안 활성화
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
@@ -81,3 +87,4 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 ;
     }
 }
+*/
