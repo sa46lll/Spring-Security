@@ -1,7 +1,6 @@
 ### 스프링 시큐리티 기본 API & Filter
 
 > 인증 & 인가
-
 - 인증
   - 유저가 누구인지 확인하는 절차, 회원가입하고 로그인 하는 것.
     - 방문자가 자신이 회사 건물에 들어 갈 수있는지 확인 받는 과정
@@ -11,7 +10,6 @@
 
 
 > 인증 API
-
 - Form Login
     ```java
     protected void configure(HttpSecurity http) throws Exception {
@@ -123,17 +121,17 @@
       @Override
       protected void configure(HttpSecurity http) throws Exception {
             http
-                      .antMatcher("/shop/**")                                         // 설정된 보안기능이 작동하는 특정 url
-                      .authorizeRequests()
-                      .antMatchers("/shop/login", "/shop/users/**").permitAll()       // 아래의 조건에 하나라도 포함되지 않으면 접근 불가
-                      .antMatchers("/shop/mypage").hasRole("USER"")
-                      .antMatchers("/shop/admin/pay").access("hasRole('ADMIN')");
-                      .antMatchers("/shop/admin/**").access("hasRole('ADMIN') or hasRole(‘SYS ')");
-                      .anyRequest().authenticated()
-      
-                      // 설정 시 구체적인 경로가 먼저오고 큰 범위의 경로가 뒤에 오게 해야 함.
-                      // ex) "/shop/admin/pay"가 "/shop/admin/**"보다 먼저 와야 함.
-                      // 그 외 인가 API 표현식 참고
+                  .antMatcher("/shop/**")                                       // 설정된 보안기능이 작동하는 특정 url
+                  .authorizeRequests()
+                  .antMatchers("/shop/login", "/shop/users/**").permitAll()     // 아래의 조건에 하나라도 포함되지 않으면 접근 불가
+                  .antMatchers("/shop/mypage").hasRole("USER"")
+                  .antMatchers("/shop/admin/pay").access("hasRole('ADMIN')");
+                  .antMatchers("/shop/admin/**").access("hasRole('ADMIN') or hasRole(‘SYS ')");
+                  .anyRequest().authenticated()
+    
+                  // 설정 시 구체적인 경로가 먼저오고 큰 범위의 경로가 뒤에 오게 해야 함.
+                  // ex) "/shop/admin/pay"가 "/shop/admin/**"보다 먼저 와야 함.
+                  // 그 외 인가 API 표현식 참고
       }
       ```
     - Method
@@ -142,7 +140,6 @@
   - 동적 방식 - DB 연동 프로그래밍
   
 > 인증/인가 API
-
 - FilterSecurityInterceptor
   - 인증 예외를 발생시키는 필터 (맨 마지막에 위치)
 - ExceptionTranslationFilter
@@ -163,8 +160,8 @@
   ```java
   protected void configure(HttpSecurity http) throws Exception {
 	    http.exceptionHandling() 					
-                  .authenticationEntryPoint(authenticationEntryPoint())     		// 인증실패 시 처리
-                  .accessDeniedHandler(accessDeniedHandler()) 			        // 인증실패 시 처리
+                  .authenticationEntryPoint(authenticationEntryPoint())     // 인증실패 시 처리
+                  .accessDeniedHandler(accessDeniedHandler()) 		  // 인증실패 시 처리
   }
   ```
 - Form 인증
@@ -180,3 +177,31 @@
         - Spring Security
           - http.csrf() : 기본 활성화 되어있음
           - http.csrf().disabled(): 비활성화
+  
+### 스프링 시큐리티 주요 아키텍처
+> 위임 필터 및 필터 빈 초기화
+- ServletFilter
+  - 요청을 보내면 서블릿 컨테이너가 받게 된다.
+  - 서블릿 필터는 스프링에서 정의된 빈을 주입해서 사용할 수 없기 때문에..
+    - DelegatingFilterProxy를 통해 서블릿 컨테이너에서 필터로써 요청을 취득하고, 스프링 컨테이너에 존재하는 특정 빈(name=springSecurityFilterChain)을 찾아 요청을 위임함.
+  - DelegatingFilterProxy
+    - 특정한 이름을 가진 스프링 빈을 찾아 그 빈에게 요청을 위임하는 ServletFilter
+      - springSecurityFilterChain 이름으로 생성된 빈을 ApplicationContext에서 찾아 요청을 위임
+      - 실제 보안처리를 하지 않음
+  - FilterChainProxy
+    - springSecurityFilterChain 이름으로 생성되는 필터 Bean
+    - DelegatingFilterProxy로부터 요청을 위임받고 스프링 시큐리티 초기화 시 생성되는 필터들을 관리하고 제어
+      - 스프링 시큐리티가 기본적으로 생성하는 필터
+      - 설정 클래스에서 API 추가 시 생성되는 필터
+    - 사용자의 요청을 필터 순서대로 호출하여 전달
+    - 사용자정의 필터를 생성해서 기존의 필터 전,후로 추가 가능
+      - 필터의 순서를 잘 정의
+    - 마지막 필터까지 인증 및 인가 예외가 발생하지 않으면 보안 통과
+> 필터 초기화, 다중 보안 설정
+- 다중 보안 설정
+  - 설정 클래스 별로 보안 기능이 각각 작동
+    - 설정 클래스 별로 RequestMatcher 설정
+    - 설정 클래스 별로 필터가 생성된다.
+    - 다중 설정 클래스를 설정 할 경우, @Order 어노테이션으로 우선순위 설정
+    - Filter들과 RequestMatcher를 가진 SecurityFilterChain 객체가 각각의 보안 설정에 따라 생성
+      - 객체들은 FilterChainProxy 빈에서 SecurityChains 리스트 멤버 변수로 관리
