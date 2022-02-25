@@ -120,18 +120,18 @@
       ```java
       @Override
       protected void configure(HttpSecurity http) throws Exception {
-            http
-                  .antMatcher("/shop/**")                                       // 설정된 보안기능이 작동하는 특정 url
-                  .authorizeRequests()
-                  .antMatchers("/shop/login", "/shop/users/**").permitAll()     // 아래의 조건에 하나라도 포함되지 않으면 접근 불가
-                  .antMatchers("/shop/mypage").hasRole("USER"")
-                  .antMatchers("/shop/admin/pay").access("hasRole('ADMIN')");
-                  .antMatchers("/shop/admin/**").access("hasRole('ADMIN') or hasRole(‘SYS ')");
-                  .anyRequest().authenticated()
-    
-                  // 설정 시 구체적인 경로가 먼저오고 큰 범위의 경로가 뒤에 오게 해야 함.
-                  // ex) "/shop/admin/pay"가 "/shop/admin/**"보다 먼저 와야 함.
-                  // 그 외 인가 API 표현식 참고
+          http
+              .antMatcher("/shop/**")                                    // 설정된 보안기능이 작동하는 특정 url
+              .authorizeRequests()
+              .antMatchers("/shop/login", "/shop/users/**").permitAll()  // 아래의 조건에 하나라도 포함되지 않으면 접근 불가
+              .antMatchers("/shop/mypage").hasRole("USER")
+              .antMatchers("/shop/admin/pay").access("hasRole('ADMIN')");
+              .antMatchers("/shop/admin/**").access("hasRole('ADMIN') or hasRole(‘SYS ')");
+              .anyRequest().authenticated()
+
+              // 설정 시 구체적인 경로가 먼저오고 큰 범위의 경로가 뒤에 오게 해야 함.
+              // ex) "/shop/admin/pay"가 "/shop/admin/**"보다 먼저 와야 함.
+              // 그 외 인가 API 표현식 참고
       }
       ```
     - Method
@@ -205,3 +205,38 @@
     - 다중 설정 클래스를 설정 할 경우, @Order 어노테이션으로 우선순위 설정
     - Filter들과 RequestMatcher를 가진 SecurityFilterChain 객체가 각각의 보안 설정에 따라 생성
       - 객체들은 FilterChainProxy 빈에서 SecurityChains 리스트 멤버 변수로 관리
+> Authentication
+- Authentication
+  - 누구인지 증명하는 것
+    - 사용자의 인증 정보를 저장하는 토큰 개념
+      - 인증 시 id와 password를 담고 인증 검증을 위해 전달되어 사용
+      - 인증 후 최종 인증 결과(user 객체, 권한정보)를 담고 SecurityContext에 저장되어 전역적으로 참조가 가능
+        - `Authentication authentication = SecurityContextHolder.getContext().getAuthentication();`
+    - 구조
+      - principal
+        - 사용자 아이디 혹은 User 객체를 저장
+      - credentials
+        - 사용자 비밀번호
+      - authorities
+        - 인증된 사용자의 권한 목록
+      - details
+        - 인증 부가 정보
+      - Authenticated
+        - 인증 여부
+> SecurityContext, SecurityContextHolder
+- SecurityContext
+  - Authentication 객체가 저장되는 보관소, 필요 시 언제든지 Authentication 객체를 꺼내 쓸 수 있도록 제공되는 클래스
+  - ThreadLocal에 저장되어 아무 곳에서나 참조가 가능하도록 설계함.
+  - 인증이 완료되면 HttpSession에 저장되어 어플리케이션 전반에 걸쳐 전역적인 참조가 가능
+- SecurityContextHolder
+  - SecurityContext 객체 저장 방식
+    - MODE_THREADLOCAL
+      - 스레드당 SecurityContext 객체를 할당, 기본값
+    - MODE_INHERITABLETHREADLOCAL
+      - 메인 스레드와 자식 스레드에 관하여 동일한 SecurityContext 유지
+    - MODE_GLOBAL
+      - 응용 프로그램에서 단 하나의 SecurityContext 저장
+  - SecurityContextHolder.clearContext()
+    - SecurityContext 기존 정보 초기화
+  - `Authentication authentication = SecurityContextHolder.getContext().getAuthentication();`
+  

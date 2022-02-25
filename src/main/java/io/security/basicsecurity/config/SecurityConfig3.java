@@ -10,8 +10,8 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
  * CsrfFilter, 필터 초기화와 다중 보안 설정
  */
 
-@Configuration
-@EnableWebSecurity
+//@Configuration
+//@EnableWebSecurity
 @Order(0)           // SecurityConfig3_2와 다른 순서를 주기 위함.
 public class SecurityConfig3 extends WebSecurityConfigurerAdapter {
     @Override
@@ -32,7 +32,7 @@ public class SecurityConfig3 extends WebSecurityConfigurerAdapter {
     }
 }
 
-@Configuration
+//@Configuration
 @Order(1)
 class SecurityConfig3_2 extends WebSecurityConfigurerAdapter {
     @Override
