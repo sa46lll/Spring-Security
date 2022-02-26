@@ -223,7 +223,6 @@
         - 인증 부가 정보
       - Authenticated
         - 인증 여부
-> SecurityContext, SecurityContextHolder
 - SecurityContext
   - Authentication 객체가 저장되는 보관소, 필요 시 언제든지 Authentication 객체를 꺼내 쓸 수 있도록 제공되는 클래스
   - ThreadLocal에 저장되어 아무 곳에서나 참조가 가능하도록 설계함.
@@ -239,4 +238,80 @@
   - SecurityContextHolder.clearContext()
     - SecurityContext 기존 정보 초기화
   - `Authentication authentication = SecurityContextHolder.getContext().getAuthentication();`
-  
+- SpringContextPersistenceFilter
+  - SecurityContext 객체의 생성, 저장, 조회
+    - 익명 사용자
+      - 새로운 SecurityContext 객체를 생성하여 SecurityContextHolder에 저장
+      - AnonymousAuthenticationFilter에서 AnonymousAuthenticationToken객체를 SecurityContext에 저장
+    - 인증 시
+      - 새로운 SecurityContext 객체를 생성하여 SecurityContextHolder에 저장
+      - UsernamePasswordAuthenticationFilter에서 인증 성공 후 SecurityContext에 UsernamePasswordAuthentication 토큰 객체를 SecurityContext에 저장
+      - 인증이 완료되면 Session에 SecurityContext를 저장
+    - 인증 후
+      - Session에서 SecurityContext를 꺼내 SecurityContextHolder에 저장
+      - SecurityContext 안에 Authentication 객체가 존재하면 인증 유지
+    - 최종 응답 시 공통
+      - `SecurityContextHolder.clearContext();`
+> Authentication Flow
+- Authentication Flow
+  1. Client
+      - 로그인 요청
+  2. UsernamePasswordAuthenticationFilter
+      - id+pw를 담은 인증 전 토큰 객체 Authentication 생성
+      - `authenticate(Authentication)`
+  3. AuthenticationManager
+      - 인증의 전반적인 관리
+      - 실제 인증 역할을 하지 않고 적절한 AuthenticationProvider에 위임
+      - `authenticate(Authentication)`
+  4. AuthenticationProvider
+      - 실제 인증 처리 역할
+      - 유저 유효성 검증(패스워드 체크 등)
+      - `loadUserByUsername(username)`
+  5. UserDetailsService
+      - 유저 객체 조회
+      - UserDetails 타입으로 반환
+      - `findById()`
+  6. Repository
+      - User 객체를 역순차적으로 전달
+> Authorization
+- Authorization
+  - 스프링 시큐리티가 지원하는 권한 계층
+    - 웹 계층
+      - URL 요청에 따른 메뉴 혹은 화면 단위의 레벨 보안
+    - 서비스 계층
+      - 화면 단위가 아닌 메소드 같은 기능 단위의 레벨 보안
+    - 도메인 계층
+      - 객체 단위의 레벨 보안
+- FilterSecurityInterceptor
+  - 스프링 Security의 가장 마지막에 위치한 필터로, 인증된 사용자에 대하여 특정 요청의 승인/거부를 최종적으로 결정 
+  - 인증 객체 없이 보호자원에 접근을 시도할 경우 AuthenticationException을 발생
+  - 인증 여부는 SecurityContext에 인증 객체 유무로 판단
+  - 인증 후 자원에 접근 가능한 권한이 존재하지 않을 경우 AccessDeniedException을 발생 (인가 예외)
+  - 권한 제어 방식 중 HTTP 자원의 보안을 처리하는 필터
+  - 권한 처리를 AccessDecisionManager에게 위임
+- AccessDecisionManager
+  - 인증정보, 요청정보, 권한정보를 이용해서 사용자의 자원접근을 허용할 것인지 거부할 것인지를 최종 결정하는 주체
+  - 여러 Voter들을 가질 수 있으며 Voter들로부터 접근허용, 거부, 보류에 해당하는 각각의 값을 리턴받고 판단 및 결정
+  - 최종 접근 거부 시 예외 발생
+  - 접근 결정의 세 가지 유형
+    - AffirmativeBased
+      - 여러 개의 Voter 클래스 중 하나라도 접근 허가로 결론을 내면 접근 허가로 판단한다.
+    - ConsensusBased
+      - 다수표(승인 및 거부)에 의해 최정 결정을 판단
+      - 동수일 경우 기본은 접근허가하나 allowIfEqualGrantedDeniedDecisions를 false로 설정할 경우 접근 거부로 결정
+    - UnanimousBased
+      - 모든 Voter가 만장일치로 접근을 승인해야하며 그렇지 않은 경우 접근을 거부한다.
+- AccessDecisionVoter
+  - 판단을 심사하는 것(위원)
+  - Voter가 권한 부여 과정에서 판단하는 자료
+    - Authentication
+      - 인증 정보(user)
+    - FilterInvocation 
+      - 요청 정보(antMatcher("/user"))
+    - ConfigAttributes 
+      - 권한 정보(hasRole("USER"))
+    - 결정 방식
+      - ACCESS_GRANTED: 접근 허용(1)
+      - ACCESS_DENIED: 접근 거부(-1)
+      - ACCESS_ABSTAIN: 접근 보류(0)
+        - Voter가 해당 타입의 요청에 대해 결정을 내릴 수 없는 경우
